@@ -27,6 +27,7 @@ typedef void *__gnuc_va_list;
 
 /* Copy __gnuc_va_list into another variable of this type.  */
 #define __va_copy(dest, src) (dest) = (src)
+#define va_copy __va_copy
 
 typedef __gnuc_va_list va_list;
 

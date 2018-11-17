@@ -8,7 +8,9 @@ typedef enum
   {
     false = 0,
     true = 1
-  } bool;
+  } _Bool;
+
+#define bool _Bool
 
 /* The names `true' and `false' must also be made available as macros.  */
 #define false	false
