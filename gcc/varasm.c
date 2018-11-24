@@ -1863,7 +1863,7 @@ static int const_hash(tree exp)
                Instead, we include the array size because the constructor could
                be shorter.  */
             if (TREE_CODE(TREE_TYPE(exp)) == RECORD_TYPE)
-                hi = ((uint32_t)TREE_TYPE(exp) & ((1 << HASHBITS) - 1)) % MAX_HASH_TABLE;
+                hi = ((uintptr_t)TREE_TYPE(exp) & ((1 << HASHBITS) - 1)) % MAX_HASH_TABLE;
             else
                 hi = ((5 + int_size_in_bytes(TREE_TYPE(exp))) & ((1 << HASHBITS) - 1))
                     % MAX_HASH_TABLE;

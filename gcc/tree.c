@@ -245,7 +245,7 @@ int (*lang_get_alias_set)(tree);
 
 /* Here is how primitive or already-canonicalized types' hash
    codes are made.  */
-#define TYPE_HASH(TYPE) ((uint32_t)(TYPE)&0777777)
+#define TYPE_HASH(TYPE) ((uintptr_t)(TYPE)&0777777)
 
 static void set_type_quals(tree, int);
 

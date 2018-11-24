@@ -43,6 +43,7 @@ __typeof, TYPEOF, NORID
 __typeof__, TYPEOF, NORID
 __volatile, TYPE_QUAL, RID_VOLATILE
 __volatile__, TYPE_QUAL, RID_VOLATILE
+_Bool, TYPESPEC, RID_BOOL
 asm, ASM_KEYWORD, NORID
 auto, SCSPEC, RID_AUTO
 break, BREAK, NORID

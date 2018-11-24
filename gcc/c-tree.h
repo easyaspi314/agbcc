@@ -169,6 +169,8 @@ extern void declare_function_name               (void);
 extern void decl_attributes                     (tree, tree, tree);
 extern int c_get_alias_set                      (tree);
 extern void c_apply_type_quals_to_decl          (int, tree);
+extern tree boolean_increment                   (enum tree_code, tree);
+
 /* Print an error message for invalid operands to arith operation CODE.
    NOP_EXPR is used as a special case (see truthvalue_conversion).  */
 extern void binary_op_error                     (enum tree_code);
@@ -255,6 +257,10 @@ extern tree wchar_type_node;
 extern tree boolean_type_node;
 extern tree boolean_true_node;
 extern tree boolean_false_node;
+
+extern tree c_bool_type_node;
+extern tree c_bool_true_node;
+extern tree c_bool_false_node;
 
 extern tree build_enumerator                    (tree, tree);
 /* Declare a predefined function.  Return the declaration.  */

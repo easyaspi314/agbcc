@@ -936,6 +936,10 @@ tree default_conversion(tree exp)
             return convert(unsigned_type_node, exp);
         return convert(integer_type_node, exp);
     }
+
+    if (code == BOOLEAN_TYPE)
+        return convert(integer_type_node, exp);
+
     if (flag_traditional && !flag_allow_single_precision
         && TYPE_MAIN_VARIANT(type) == float_type_node)
         return convert(double_type_node, exp);
@@ -1597,7 +1601,9 @@ static tree convert_arguments(tree typelist, tree values, tree name, tree fundec
                     fundecl, name, parmnum + 1);
 
 #ifdef PROMOTE_PROTOTYPES
-                if ((TREE_CODE(type) == INTEGER_TYPE || TREE_CODE(type) == ENUMERAL_TYPE)
+                if ((TREE_CODE(type) == INTEGER_TYPE
+                    || TREE_CODE(type) == ENUMERAL_TYPE
+                    || TREE_CODE(type) == BOOLEAN_TYPE)
                     && (TYPE_PRECISION(type) < TYPE_PRECISION(integer_type_node)))
                     parmval = default_conversion(parmval);
 #endif
@@ -2556,7 +2562,7 @@ tree build_unary_op(enum tree_code code, tree xarg, int noconvert)
 
     if (typecode == ERROR_MARK)
         return error_mark_node;
-    if (typecode == ENUMERAL_TYPE)
+    if (typecode == ENUMERAL_TYPE || typecode == BOOLEAN_TYPE)
         typecode = INTEGER_TYPE;
 
     switch (code)
@@ -2724,19 +2730,26 @@ tree build_unary_op(enum tree_code code, tree xarg, int noconvert)
                     else
                     {
                         tree incremented, modify, value;
-                        arg = stabilize_reference(arg);
-                        if (code == PREINCREMENT_EXPR || code == PREDECREMENT_EXPR)
-                            value = arg;
+                        if (TREE_CODE(TREE_TYPE(arg)) == BOOLEAN_TYPE)
+                        {
+                            value = boolean_increment(code, arg);
+                        }
                         else
-                            value = save_expr(arg);
-                        incremented
-                            = build(((code == PREINCREMENT_EXPR || code == POSTINCREMENT_EXPR)
-                                            ? PLUS_EXPR
-                                            : MINUS_EXPR),
-                                argtype, value, inc);
-                        TREE_SIDE_EFFECTS(incremented) = 1;
-                        modify = build_modify_expr(arg, NOP_EXPR, incremented);
-                        value = build(COMPOUND_EXPR, TREE_TYPE(arg), modify, value);
+                        {
+                            arg = stabilize_reference(arg);
+                            if (code == PREINCREMENT_EXPR || code == PREDECREMENT_EXPR)
+                                value = arg;
+                            else
+                                value = save_expr(arg);
+                            incremented
+                                = build(((code == PREINCREMENT_EXPR || code == POSTINCREMENT_EXPR)
+                                                ? PLUS_EXPR
+                                                : MINUS_EXPR),
+                                    argtype, value, inc);
+                            TREE_SIDE_EFFECTS(incremented) = 1;
+                            modify = build_modify_expr(arg, NOP_EXPR, incremented);
+                            value = build(COMPOUND_EXPR, TREE_TYPE(arg), modify, value);
+                        }
                         TREE_USED(value) = 1;
                         return value;
                     }
@@ -2759,7 +2772,11 @@ tree build_unary_op(enum tree_code code, tree xarg, int noconvert)
                     ((code == PREINCREMENT_EXPR || code == POSTINCREMENT_EXPR) ? "increment"
                                                                                : "decrement"));
 
-            val = build(code, TREE_TYPE(arg), arg, inc);
+            if (TREE_CODE(TREE_TYPE(arg)) == BOOLEAN_TYPE)
+                val = boolean_increment(code, arg);
+            else
+                val = build(code, TREE_TYPE(arg), arg, inc);
+
             TREE_SIDE_EFFECTS(val) = 1;
             val = convert(result_type, val);
             if (TREE_CODE(val) != code)
@@ -3668,7 +3685,9 @@ tree build_modify_expr(tree lhs, enum tree_code modifycode, tree rhs)
        the actual amount of storage the member occupies.  */
 
     if (TREE_CODE(lhs) == COMPONENT_REF
-        && (TREE_CODE(lhstype) == INTEGER_TYPE || TREE_CODE(lhstype) == REAL_TYPE
+        && (TREE_CODE(lhstype) == INTEGER_TYPE
+               || TREE_CODE(lhstype) == REAL_TYPE
+               || TREE_CODE(lhstype) == BOOLEAN_TYPE
                || TREE_CODE(lhstype) == ENUMERAL_TYPE))
         lhstype = TREE_TYPE(get_unwidened(lhs, 0));
 
@@ -3751,10 +3770,13 @@ static tree convert_for_assignment(
         return error_mark_node;
     }
     /* Arithmetic types all interconvert, and enum is treated like int.  */
-    if ((codel == INTEGER_TYPE || codel == REAL_TYPE || codel == ENUMERAL_TYPE
+    if ((codel == INTEGER_TYPE
+            || codel == REAL_TYPE
+            || codel == ENUMERAL_TYPE
+            || codel == BOOLEAN_TYPE
             || codel == COMPLEX_TYPE)
         && (coder == INTEGER_TYPE || coder == REAL_TYPE || coder == ENUMERAL_TYPE
-               || coder == COMPLEX_TYPE))
+               || coder == BOOLEAN_TYPE || coder == COMPLEX_TYPE))
         return convert_and_check(type, rhs);
 
     /* Conversion to a transparent union from its member types.
@@ -3920,6 +3942,8 @@ static tree convert_for_assignment(
             funname, parmnum);
         return convert(type, rhs);
     }
+    else if (codel == BOOLEAN_TYPE && coder == POINTER_TYPE)
+        return convert(type, rhs);
 
     if (!errtype)
     {
@@ -4520,7 +4544,7 @@ static tree digest_init(tree type, tree init, int require_constant, int construc
     /* Handle scalar types, including conversions.  */
 
     if (code == INTEGER_TYPE || code == REAL_TYPE || code == POINTER_TYPE || code == ENUMERAL_TYPE
-        || code == COMPLEX_TYPE)
+        || code == COMPLEX_TYPE || code == BOOLEAN_TYPE)
     {
         /* Note that convert_for_assignment calls default_conversion
        for arrays and functions.  We must not call it in the

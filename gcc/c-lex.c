@@ -160,6 +160,7 @@ void init_lex(void)
     ridpointers[(int)RID_DOUBLE] = get_identifier("double");
     ridpointers[(int)RID_SHORT] = get_identifier("short");
     ridpointers[(int)RID_LONG] = get_identifier("long");
+    ridpointers[(int)RID_BOOL] = get_identifier("_Bool");
     ridpointers[(int)RID_UNSIGNED] = get_identifier("unsigned");
     ridpointers[(int)RID_SIGNED] = get_identifier("signed");
     ridpointers[(int)RID_INLINE] = get_identifier("inline");

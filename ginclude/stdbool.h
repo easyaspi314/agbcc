@@ -2,21 +2,23 @@
 #ifndef __STDBOOL_H__
 #define __STDBOOL_H__	1
 
-/* The type `bool' must promote to `int' or `unsigned int'.  The constants
-   `true' and `false' must have the value 0 and 1 respectively.  */
-typedef enum
-  {
-    false = 0,
-    true = 1
-  } _Bool;
+#ifndef __cplusplus
 
-#define bool _Bool
+#define bool    _Bool
+#define true    1
+#define false   0
 
-/* The names `true' and `false' must also be made available as macros.  */
-#define false	false
-#define true	true
+#else /* __cplusplus */
+
+/* Supporting <stdbool.h> in C++ is a GCC extension.  */
+#define _Bool   bool
+#define bool    bool
+#define false   false
+#define true    true
+
+#endif /* __cplusplus */
 
 /* Signal that all the definitions are present.  */
-#define __bool_true_false_are_defined	1
+#define __bool_true_false_are_defined   1
 
 #endif	/* stdbool.h */

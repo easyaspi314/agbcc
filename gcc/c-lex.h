@@ -28,6 +28,7 @@ enum rid
   RID_FLOAT,
   RID_DOUBLE,
   RID_VOID,
+  RID_BOOL,
   RID_UNUSED1,
 
   RID_UNSIGNED,
