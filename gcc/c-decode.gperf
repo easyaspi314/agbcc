@@ -1,0 +1,130 @@
+%{
+enum command_line_option
+{
+    FLAG_ALLOW_SINGLE_PRECISION,
+    FLAG_ASM,
+    FLAG_BUILTIN,
+    FLAG_C90,
+    FLAG_C99,
+    FLAG_COND_MISMATCH,
+    FLAG_CONST_STRINGS,
+    FLAG_FREESTANDING,
+    FLAG_GNU90,
+    FLAG_GNU99,
+    FLAG_IDENT,
+    FLAG_SHORT_DOUBLE,
+    FLAG_SHORT_ENUMS,
+    FLAG_SIGNED_BITFIELDS,
+    FLAG_TRADITIONAL,
+    FLAG_W_ALL,
+    FLAG_W_BAD_FUNC_CAST,
+    FLAG_W_CAST_QUAL,
+    FLAG_W_CHAR_SUBSCRIPTS,
+    FLAG_W_CONVERSION,
+    FLAG_W_IMPLICIT,
+    FLAG_W_IMPLICIT_FUNC,
+    FLAG_W_IMPLICIT_INT,
+    FLAG_W_LONG_LONG,
+    FLAG_W_MISSING_BRACES,
+    FLAG_W_MISSING_DECLARATIONS,
+    FLAG_W_MISSING_NORETURN,
+    FLAG_W_MISSING_PROTOTYPES,
+    FLAG_W_MULTICHAR,
+    FLAG_W_NESTED_EXTERNS,
+    FLAG_W_PARENTHESES,
+    FLAG_W_POINTER_ARITH,
+    FLAG_W_REDUNDANT_DECLS,
+    FLAG_W_RETURN_TYPE,
+    FLAG_W_SIGN_COMPARE,
+    FLAG_W_STRICT_PROTOTYPES,
+    FLAG_W_TRADITIONAL
+};
+%}
+struct option
+{
+    const char *name;
+    int type;
+    int val;
+};
+%%
+-ftraditional, FLAG_TRADITIONAL, 1
+-traditional, FLAG_TRADITIONAL, 1
+-fnotraditional, FLAG_TRADITIONAL, 0
+-fno-traditional, FLAG_TRADITIONAL, 0
+-fallow-single-precision, FLAG_ALLOW_SINGLE_PRECISION, 1
+-fhosted, FLAG_FREESTANDING, 0
+-fno-freestanding, FLAG_FREESTANDING, 0
+-fno-hosted, FLAG_FREESTANDING, 1
+-ffreestanding, FLAG_FREESTANDING, 1
+-std=iso9899:1990, FLAG_C90, 1
+-ansi, FLAG_C90, 1
+-std=c90, FLAG_C90, 1
+-std=c89, FLAG_C90, 1
+-std=iso9899:199409, FLAG_C90, 1
+-std=iso9899:1999, FLAG_C99, 1
+-std=c99, FLAG_C99, 1
+-std=gnu90, FLAG_GNU90, 1
+-std=gnu89, FLAG_GNU90, 1
+-std=gnu99, FLAG_GNU99, 1
+-fsigned-bitfields, FLAG_SIGNED_BITFIELDS, 1
+-fno-unsigned-bitfields, FLAG_SIGNED_BITFIELDS, 1
+-funsigned-bitfields, FLAG_SIGNED_BITFIELDS, 0
+-fno-signed-bitfields, FLAG_SIGNED_BITFIELDS, 0
+-fshort-enums, FLAG_SHORT_ENUMS, 1
+-fno-short-enums,  FLAG_SHORT_ENUMS, 0
+-fcond-mismatch,  FLAG_COND_MISMATCH, 1
+-fno-cond-mismatch, FLAG_COND_MISMATCH, 0
+-fshort-double,  FLAG_SHORT_DOUBLE, 1
+-fno-short-double, FLAG_SHORT_DOUBLE, 0
+-fasm, FLAG_ASM, 1
+-fno-asm, FLAG_ASM, 0
+-fbuiltin, FLAG_BUILTIN, 1
+-fno-builtin, FLAG_BUILTIN, 0
+-fno-ident, FLAG_IDENT, 0
+-fident, FLAG_IDENT, 1
+-Werror-implicit-function-declaration, FLAG_W_IMPLICIT_FUNC, 2
+-Wimplicit-function-declaration, FLAG_W_IMPLICIT_FUNC, 1
+-Wno-implicit-function-declaration, FLAG_W_IMPLICIT_FUNC, 0
+-Wimplicit-int, FLAG_W_IMPLICIT_INT, 1
+-Wno-implicit-int, FLAG_W_IMPLICIT_INT, 0
+-Wimplicit, FLAG_W_IMPLICIT, 1
+-Wno-implicit, FLAG_W_IMPLICIT, 0
+-Wlong-long, FLAG_W_LONG_LONG, 1
+-Wno-long-long, FLAG_W_LONG_LONG, 0
+-Wwrite-strings, FLAG_CONST_STRINGS, 1
+-Wno-write-strings, FLAG_CONST_STRINGS, 0
+-Wcast-qual, FLAG_W_CAST_QUAL, 1
+-Wno-cast-qual, FLAG_W_CAST_QUAL, 0
+-Wbad-function-cast, FLAG_W_BAD_FUNC_CAST, 1
+-Wno-bad-function-cast, FLAG_W_BAD_FUNC_CAST, 0
+-Wmissing-noreturn, FLAG_W_MISSING_NORETURN, 1
+-Wno-missing-noreturn, FLAG_W_MISSING_NORETURN, 0
+-Wpointer-arith, FLAG_W_POINTER_ARITH, 1
+-Wno-pointer-arith, FLAG_W_POINTER_ARITH, 0
+-Wstrict-prototypes, FLAG_W_STRICT_PROTOTYPES, 1
+-Wno-strict-prototypes, FLAG_W_STRICT_PROTOTYPES, 0
+-Wmissing-prototypes, FLAG_W_MISSING_PROTOTYPES, 1
+-Wno-missing-prototypes, FLAG_W_MISSING_PROTOTYPES, 0
+-Wmissing-declarations, FLAG_W_MISSING_DECLARATIONS, 1
+-Wno-missing-declarations, FLAG_W_MISSING_DECLARATIONS, 0
+-Wredundant-decls, FLAG_W_REDUNDANT_DECLS, 1
+-Wno-redundant-decls, FLAG_W_REDUNDANT_DECLS, 0
+-Wnested-externs, FLAG_W_NESTED_EXTERNS, 1
+-Wno-nested-externs, FLAG_W_NESTED_EXTERNS, 0
+-Wtraditional, FLAG_W_TRADITIONAL, 1
+-Wno-traditional, FLAG_W_TRADITIONAL, 0
+-Wchar-subscripts, FLAG_W_CHAR_SUBSCRIPTS, 1
+-Wno-char-subscripts, FLAG_W_CHAR_SUBSCRIPTS, 0
+-Wconversion, FLAG_W_CONVERSION, 1
+-Wno-conversion, FLAG_W_CONVERSION, 0
+-Wparentheses, FLAG_W_PARENTHESES, 1
+-Wno-parentheses, FLAG_W_PARENTHESES, 0
+-Wreturn-type, FLAG_W_RETURN_TYPE, 1
+-Wno-return-type, FLAG_W_RETURN_TYPE, 0
+-Wmissing-braces, FLAG_W_MISSING_BRACES, 1
+-Wno-missing-braces, FLAG_W_MISSING_BRACES, 0
+-Wsign-compare, FLAG_W_SIGN_COMPARE, 1
+-Wno-sign-compare, FLAG_W_SIGN_COMPARE, 0
+-Wmultichar, FLAG_W_MULTICHAR, 1
+-Wno-multichar, FLAG_W_MULTICHAR, 0
+-Wall, FLAG_W_ALL, 1

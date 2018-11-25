@@ -207,7 +207,7 @@ void init_lex(void)
         UNSET_RESERVED_WORD("iterator");
         UNSET_RESERVED_WORD("complex");
     }
-    else if (!flag_isoc9x)
+    else if (!flag_isoc99)
         UNSET_RESERVED_WORD("restrict");
 
     if (flag_no_asm)

@@ -2255,7 +2255,7 @@ yyreduce:
         tree type = (yyvsp[(2) - (7)].ttype);
         finish_init();
 
-        if (pedantic && !flag_isoc9x)
+        if (pedantic && !flag_isoc99)
             pedwarn("ANSI C forbids constructor expressions");
         if (TYPE_NAME(type) != 0)
         {
@@ -3502,7 +3502,7 @@ yyreduce:
 
     {
         (yyval.ttype) = build_nt(ARRAY_REF, (yyvsp[(1) - (4)].ttype), NULL_TREE);
-        if (!flag_isoc9x)
+        if (!flag_isoc99)
             error("`[*]' in parameter declaration only allowed in ISO C 9x");
         ;
     }
@@ -3569,7 +3569,7 @@ yyreduce:
 
     {
         (yyval.ttype) = build_nt(ARRAY_REF, (yyvsp[(1) - (4)].ttype), NULL_TREE);
-        if (!flag_isoc9x)
+        if (!flag_isoc99)
             error("`[*]' in parameter declaration only allowed in ISO C 9x");
         ;
     }
@@ -3765,7 +3765,7 @@ yyreduce:
     case 261:
 
     {
-        if (pedantic && !flag_isoc9x)
+        if (pedantic && !flag_isoc99)
             pedwarn("comma at end of enumerator list");
         ;
     }

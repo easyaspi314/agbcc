@@ -456,7 +456,7 @@ int flag_traditional;
 
 /* Nonzero means use the ISO C9x dialect of C.  */
 
-int flag_isoc9x = 0;
+int flag_isoc99 = 0;
 
 /* Nonzero means that we have builtin functions, and main is an int */
 
@@ -571,223 +571,158 @@ int warn_sign_compare = -1;
 
 int warn_multichar = 1;
 
+#include "c-decode.h"
 /* Decode the string P as a language-specific option for C.  */
 
 void c_decode_option(char *p)
 {
-    const char *argstart = (strlen(p) >= 5) ? &p[5] : NULL;
+    const struct option *opt = decode_option(p, strlen(p));
+    if (opt == NULL)
+        return;
 
-    if (!strcmp(p, "-ftraditional") || !strcmp(p, "-traditional"))
+    switch (opt->type)
     {
-        flag_traditional = 1;
-        flag_writable_strings = 1;
-    }
-    else if (!strcmp(p, "-fallow-single-precision"))
+    case FLAG_TRADITIONAL:
+        flag_traditional = opt->val;
+        flag_writable_strings = opt->val;
+        break;
+    case FLAG_ALLOW_SINGLE_PRECISION:
         flag_allow_single_precision = 1;
-    else if (!strcmp(p, "-fhosted") || !strcmp(p, "-fno-freestanding"))
-    {
-        flag_hosted = 1;
-        flag_no_builtin = 0;
-    }
-    else if (!strcmp(p, "-ffreestanding") || !strcmp(p, "-fno-hosted"))
-    {
-        flag_hosted = 0;
-        flag_no_builtin = 1;
-    }
-    else if (!strcmp(p, "-fnotraditional") || !strcmp(p, "-fno-traditional"))
-    {
+        break;
+    case FLAG_FREESTANDING:
+        flag_hosted = !opt->val;
+        flag_no_builtin = opt->val;
+        break;
+    case FLAG_C90:
         flag_traditional = 0;
         flag_writable_strings = 0;
-    }
-    else if (!strncmp(p, "-std=", 5))
-    {
-        /* Select the appropriate language standard.  We currently
-       recognize:
-       -std=iso9899:1990	same as -ansi
-       -std=iso9899:199409	ISO C as modified in amend. 1
-       -std=iso9899:199x	ISO C 9x
-       -std=c89		same as -std=iso9899:1990
-       -std=c9x		same as -std=iso9899:199x
-       -std=gnu89		default, iso9899:1990 + gnu extensions
-       -std=gnu9x		iso9899:199x + gnu extensions
-        */
-
-        if (!strcmp(argstart, "iso9899:1990") || !strcmp(argstart, "c89"))
+        flag_no_asm = 1;
+        flag_no_nonansi_builtin = 1;
+        flag_isoc99 = 0;
+        break;
+    case FLAG_C99:
+        flag_traditional = 0;
+        flag_writable_strings = 0;
+        flag_no_asm = 1;
+        flag_no_nonansi_builtin = 1;
+        flag_isoc99 = 1;
+        break;
+    case FLAG_GNU90:
+        flag_traditional = 0;
+        flag_writable_strings = 0;
+        flag_no_asm = 0;
+        flag_no_nonansi_builtin = 0;
+        flag_isoc99 = 0;
+        break;
+    case FLAG_GNU99:
+        flag_traditional = 0;
+        flag_writable_strings = 0;
+        flag_no_asm = 0;
+        flag_no_nonansi_builtin = 0;
+        flag_isoc99 = 1;
+        break;
+    case FLAG_SIGNED_BITFIELDS:
+        flag_signed_bitfields = opt->val;
+        explicit_flag_signed_bitfields = 1;
+        break;
+    case FLAG_SHORT_ENUMS:
+        flag_short_enums = opt->val;
+        break;
+    case FLAG_COND_MISMATCH:
+        flag_cond_mismatch = opt->val;
+        break;
+    case FLAG_SHORT_DOUBLE:
+        flag_short_double = opt->val;
+        break;
+    case FLAG_ASM:
+        flag_no_asm = !opt->val;
+        break;
+    case FLAG_BUILTIN:
+        flag_no_builtin = !opt->val;
+        break;
+    case FLAG_IDENT:
+        flag_no_ident = !opt->val;
+        break;
+    case FLAG_W_IMPLICIT_FUNC:
+        mesg_implicit_function_declaration = opt->val;
+        break;
+    case FLAG_W_IMPLICIT_INT:
+        warn_implicit_int = opt->val;
+        break;
+    case FLAG_W_IMPLICIT:
+        if (opt->val)
         {
-        iso_1990:
-            flag_traditional = 0;
-            flag_writable_strings = 0;
-            flag_no_asm = 1;
-            flag_no_nonansi_builtin = 1;
-            flag_isoc9x = 0;
-        }
-        else if (!strcmp(argstart, "iso9899:199409"))
-        {
-            /* ??? The changes since ISO C 1990 are not supported.  */
-            goto iso_1990;
-        }
-        else if (!strcmp(argstart, "iso9899:199x") || !strcmp(argstart, "c9x"))
-        {
-            flag_traditional = 0;
-            flag_writable_strings = 0;
-            flag_no_asm = 1;
-            flag_no_nonansi_builtin = 1;
-            flag_isoc9x = 1;
-        }
-        else if (!strcmp(argstart, "gnu89"))
-        {
-            flag_traditional = 0;
-            flag_writable_strings = 0;
-            flag_no_asm = 0;
-            flag_no_nonansi_builtin = 0;
-            flag_isoc9x = 0;
-        }
-        else if (!strcmp(argstart, "gnu9x"))
-        {
-            flag_traditional = 0;
-            flag_writable_strings = 0;
-            flag_no_asm = 0;
-            flag_no_nonansi_builtin = 0;
-            flag_isoc9x = 1;
+            warn_implicit_int = 1;
+            if (mesg_implicit_function_declaration != 2)
+                mesg_implicit_function_declaration = 1;
         }
         else
-            error("unknown C standard `%s'", argstart);
-    }
-    else if (!strcmp(p, "-fsigned-bitfields") || !strcmp(p, "-fno-unsigned-bitfields"))
-    {
-        flag_signed_bitfields = 1;
-        explicit_flag_signed_bitfields = 1;
-    }
-    else if (!strcmp(p, "-funsigned-bitfields") || !strcmp(p, "-fno-signed-bitfields"))
-    {
-        flag_signed_bitfields = 0;
-        explicit_flag_signed_bitfields = 1;
-    }
-    else if (!strcmp(p, "-fshort-enums"))
-        flag_short_enums = 1;
-    else if (!strcmp(p, "-fno-short-enums"))
-        flag_short_enums = 0;
-    else if (!strcmp(p, "-fcond-mismatch"))
-        flag_cond_mismatch = 1;
-    else if (!strcmp(p, "-fno-cond-mismatch"))
-        flag_cond_mismatch = 0;
-    else if (!strcmp(p, "-fshort-double"))
-        flag_short_double = 1;
-    else if (!strcmp(p, "-fno-short-double"))
-        flag_short_double = 0;
-    else if (!strcmp(p, "-fasm"))
-        flag_no_asm = 0;
-    else if (!strcmp(p, "-fno-asm"))
-        flag_no_asm = 1;
-    else if (!strcmp(p, "-fbuiltin"))
-        flag_no_builtin = 0;
-    else if (!strcmp(p, "-fno-builtin"))
-        flag_no_builtin = 1;
-    else if (!strcmp(p, "-fno-ident"))
-        flag_no_ident = 1;
-    else if (!strcmp(p, "-fident"))
-        flag_no_ident = 0;
-    else if (!strcmp(p, "-ansi"))
-        goto iso_1990;
-    else if (!strcmp(p, "-Werror-implicit-function-declaration"))
-        mesg_implicit_function_declaration = 2;
-    else if (!strcmp(p, "-Wimplicit-function-declaration"))
-        mesg_implicit_function_declaration = 1;
-    else if (!strcmp(p, "-Wno-implicit-function-declaration"))
-        mesg_implicit_function_declaration = 0;
-    else if (!strcmp(p, "-Wimplicit-int"))
-        warn_implicit_int = 1;
-    else if (!strcmp(p, "-Wno-implicit-int"))
-        warn_implicit_int = 0;
-    else if (!strcmp(p, "-Wimplicit"))
-    {
-        warn_implicit_int = 1;
-        if (mesg_implicit_function_declaration != 2)
-            mesg_implicit_function_declaration = 1;
-    }
-    else if (!strcmp(p, "-Wno-implicit"))
-        warn_implicit_int = 0, mesg_implicit_function_declaration = 0;
-    else if (!strcmp(p, "-Wlong-long"))
-        warn_long_long = 1;
-    else if (!strcmp(p, "-Wno-long-long"))
-        warn_long_long = 0;
-    else if (!strcmp(p, "-Wwrite-strings"))
-        flag_const_strings = 1;
-    else if (!strcmp(p, "-Wno-write-strings"))
-        flag_const_strings = 0;
-    else if (!strcmp(p, "-Wcast-qual"))
-        warn_cast_qual = 1;
-    else if (!strcmp(p, "-Wno-cast-qual"))
-        warn_cast_qual = 0;
-    else if (!strcmp(p, "-Wbad-function-cast"))
-        warn_bad_function_cast = 1;
-    else if (!strcmp(p, "-Wno-bad-function-cast"))
-        warn_bad_function_cast = 0;
-    else if (!strcmp(p, "-Wmissing-noreturn"))
-        warn_missing_noreturn = 1;
-    else if (!strcmp(p, "-Wno-missing-noreturn"))
-        warn_missing_noreturn = 0;
-    else if (!strcmp(p, "-Wpointer-arith"))
-        warn_pointer_arith = 1;
-    else if (!strcmp(p, "-Wno-pointer-arith"))
-        warn_pointer_arith = 0;
-    else if (!strcmp(p, "-Wstrict-prototypes"))
-        warn_strict_prototypes = 1;
-    else if (!strcmp(p, "-Wno-strict-prototypes"))
-        warn_strict_prototypes = 0;
-    else if (!strcmp(p, "-Wmissing-prototypes"))
-        warn_missing_prototypes = 1;
-    else if (!strcmp(p, "-Wno-missing-prototypes"))
-        warn_missing_prototypes = 0;
-    else if (!strcmp(p, "-Wmissing-declarations"))
-        warn_missing_declarations = 1;
-    else if (!strcmp(p, "-Wno-missing-declarations"))
-        warn_missing_declarations = 0;
-    else if (!strcmp(p, "-Wredundant-decls"))
-        warn_redundant_decls = 1;
-    else if (!strcmp(p, "-Wno-redundant-decls"))
-        warn_redundant_decls = 0;
-    else if (!strcmp(p, "-Wnested-externs"))
-        warn_nested_externs = 1;
-    else if (!strcmp(p, "-Wno-nested-externs"))
-        warn_nested_externs = 0;
-    else if (!strcmp(p, "-Wtraditional"))
-        warn_traditional = 1;
-    else if (!strcmp(p, "-Wno-traditional"))
-        warn_traditional = 0;
-    else if (!strcmp(p, "-Wchar-subscripts"))
+        {
+            warn_implicit_int = 0;
+            mesg_implicit_function_declaration = 0;
+        }
+        break;
+    case FLAG_W_LONG_LONG:
+        warn_long_long = opt->val;
+        break;
+    case FLAG_CONST_STRINGS:
+        flag_const_strings = opt->val;
+        break;
+    case FLAG_W_CAST_QUAL:
+        warn_cast_qual = opt->val;
+        break;
+    case FLAG_W_BAD_FUNC_CAST:
+        warn_bad_function_cast = opt->val;
+        break;
+    case FLAG_W_MISSING_NORETURN:
+        warn_missing_noreturn = opt->val;
+        break;
+    case FLAG_W_POINTER_ARITH:
+        warn_pointer_arith = opt->val;
+        break;
+    case FLAG_W_STRICT_PROTOTYPES:
+        warn_strict_prototypes = opt->val;
+        break;
+    case FLAG_W_MISSING_PROTOTYPES:
+        warn_missing_prototypes = opt->val;
+        break;
+    case FLAG_W_MISSING_DECLARATIONS:
+        warn_missing_declarations = opt->val;
+        break;
+    case FLAG_W_REDUNDANT_DECLS:
+        warn_redundant_decls = opt->val;
+        break;
+    case FLAG_W_NESTED_EXTERNS:
+        warn_nested_externs = opt->val;
+        break;
+    case FLAG_W_TRADITIONAL:
+        warn_traditional = opt->val;
+        break;
+    case FLAG_W_CHAR_SUBSCRIPTS:
         warn_char_subscripts = 1;
-    else if (!strcmp(p, "-Wno-char-subscripts"))
-        warn_char_subscripts = 0;
-    else if (!strcmp(p, "-Wconversion"))
-        warn_conversion = 1;
-    else if (!strcmp(p, "-Wno-conversion"))
-        warn_conversion = 0;
-    else if (!strcmp(p, "-Wparentheses"))
-        warn_parentheses = 1;
-    else if (!strcmp(p, "-Wno-parentheses"))
-        warn_parentheses = 0;
-    else if (!strcmp(p, "-Wreturn-type"))
-        warn_return_type = 1;
-    else if (!strcmp(p, "-Wno-return-type"))
-        warn_return_type = 0;
-    else if (!strcmp(p, "-Wmissing-braces"))
-        warn_missing_braces = 1;
-    else if (!strcmp(p, "-Wno-missing-braces"))
-        warn_missing_braces = 0;
-    else if (!strcmp(p, "-Wsign-compare"))
-        warn_sign_compare = 1;
-    else if (!strcmp(p, "-Wno-sign-compare"))
-        warn_sign_compare = 0;
-    else if (!strcmp(p, "-Wmultichar"))
-        warn_multichar = 1;
-    else if (!strcmp(p, "-Wno-multichar"))
-        warn_multichar = 0;
-    else if (!strcmp(p, "-Wall"))
-    {
+        break;
+    case FLAG_W_CONVERSION:
+        warn_conversion = opt->val;
+        break;
+    case FLAG_W_PARENTHESES:
+        warn_parentheses = opt->val;
+        break;
+    case FLAG_W_RETURN_TYPE:
+        warn_return_type = opt->val;
+        break;
+    case FLAG_W_MISSING_BRACES:
+        warn_missing_braces = opt->val;
+        break;
+    case FLAG_W_SIGN_COMPARE:
+        warn_sign_compare = opt->val;
+        break;
+    case FLAG_W_MULTICHAR:
+        warn_multichar = opt->val;
+        break;
+    case FLAG_W_ALL:
         /* We save the value of warn_uninitialized, since if they put
-       -Wuninitialized on the command line, we need to generate a
-       warning about not using it without also specifying -O.  */
+          -Wuninitialized on the command line, we need to generate a
+          warning about not using it without also specifying -O.  */
         if (warn_uninitialized != 1)
             warn_uninitialized = 2;
         warn_implicit_int = 1;
@@ -798,6 +733,9 @@ void c_decode_option(char *p)
         warn_char_subscripts = 1;
         warn_parentheses = 1;
         warn_missing_braces = 1;
+        break;
+    default:
+        break;
     }
 }
 
@@ -4031,7 +3969,7 @@ static tree grokdeclarator(
                warning since it is more explicit.  */
             if ((warn_implicit_int || warn_return_type) && funcdef_flag)
                 warn_about_return_type = 1;
-            else if (warn_implicit_int || flag_isoc9x)
+            else if (warn_implicit_int || flag_isoc99)
                 warning("type defaults to `int' in declaration of `%s'", name);
         }
 
