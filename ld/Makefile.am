@@ -124,13 +124,13 @@ deffilep.@OBJEXT@: deffilep.c
 SRC_POTFILES = $(CFILES) $(HFILES)
 BLD_POTFILES = $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES)
 
-ldmain.@OBJEXT@: ldmain.c config.status
+ldmain.@OBJEXT@: ldmain.c
 	$(COMPILE) -c -DDEFAULT_EMULATION='"$(EMUL)"' \
 	  -DBINDIR='"$(bindir)"' -DTOOLBINDIR='"$(tooldir)/bin"' \
 	  -DTARGET='"@target@"' -DTARGET_SYSTEM_ROOT=\"\" \
 	  $(srcdir)/ldmain.c
 
-ldfile.@OBJEXT@: ldfile.c config.status
+ldfile.@OBJEXT@: ldfile.c
 	$(COMPILE) -c -DSCRIPTDIR='"$(scriptdir)"' -DBINDIR='"$(bindir)"' \
 	  -DTOOLBINDIR='"$(tooldir)/bin"' \
 	  $(srcdir)/ldfile.c

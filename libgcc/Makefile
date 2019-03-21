@@ -9,7 +9,7 @@ else ifneq (,$(shell command -v bash || true))
 SHELL := bash -o pipefail
 endif
 
-CC1 := ../old_agbcc
+CC1 := ../old_agbcc -std=gnu99
 AR := ../binutils/ar
 AS := ../gas/as-new
 CPP := $(CC) -E

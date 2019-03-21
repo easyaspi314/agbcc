@@ -6,7 +6,7 @@ ENABLE_AUTOTOOLS =
 DO_AUTORECONF = $(error Please install autotools first!)
 else
 ENABLE_AUTOTOOLS ?= 1
-DO_AUTORECONF := autoreconf -f && { command -v untermux >/dev/null && untermux configure; }
+DO_AUTORECONF := autoreconf -f && { command -v untermux >/dev/null && untermux config.status; }
 endif
 
 ifeq (,$(ENABLE_AUTOTOOLS))
@@ -25,14 +25,11 @@ endif
 
 SUBDIRS := ld binutils gas bfd libiberty
 BINUTILS_TGTS := $(addsuffix -all, $(SUBDIRS))
-CONFIGURE_TGTS := $(addsuffix -configure, $(SUBDIRS))
+CONFIGURE_TGTS := $(addsuffix /Makefile, $(SUBDIRS))
 OBJS_TGTS := $(addsuffix -objs, $(SUBDIRS))
 CLEAN := $(addsuffix -clean, $(SUBDIRS))
 
 CONFIGURE_ARGS := SHELL="$(SHELL)" LDFLAGS="" CFLAGS="$(CFLAGS)" CC="$(CC)" --disable-plugins --without-libtool --without-libintl --target=armv4tl-none-eabi --program-prefix=arm-none-eabi- --disable-dependency-tracking --enable-gold=no --with-system-zlib --without-isl --exec-prefix=NONE CC="$(CC)"
-CONFIGURE := $(SHELL) ./configure -C --disable-option-checking $(CONFIGURE_ARGS)
-
-CONFIGURE_ACS := $(wildcard **/configure.ac)
 
 INSTALL_SUBDIRS := ld binutils gas
 BINUTILS_INSTALL := $(addsuffix -install, $(INSTALL_SUBDIRS))
@@ -40,7 +37,7 @@ BINUTILS_INSTALL_STRIP := $(addsuffix -install-strip, $(INSTALL_SUBDIRS))
 
 prefix ?=
 
-# The dash shell (/bin/sh on ubuntu) does not support $LINENO and messes up configure scripts.
+# The dash shell (/bin/sh on ubuntu) does not support $LINENO and messes up config.status scripts.
 DASH_LINENO_CHECK := $(shell $(SHELL) -c 'echo $$LINENO')
 ifeq (,$(DASH_LINENO_CHECK))
   ifneq (,$(shell which mksh))
@@ -51,6 +48,7 @@ ifeq (,$(DASH_LINENO_CHECK))
 endif
 export SHELL := $(SHELL)
 MAKEFLAGS += --no-print-directory
+CONFIG_STATUS_DEPENDENCIES := bfd/bfd-in3.h include/config.h $(addsuffix /Makefile, $(SUBDIRS))
 
 ifeq (Windows_NT,$(OS))
 EXE := .exe
@@ -77,16 +75,19 @@ install: install-prefix-check binutils old_gcc gcc libc libgcc $(BINUTILS_INSTAL
 	cp libgcc.a $(prefix)/tools/agbcc/lib/
 	cp libc.a $(prefix)/tools/agbcc/lib/
 
-$(CONFIGURE_ACS): %/configure.ac: %/ FORCE
+$(CONFIGURE_ACS): %/configure.ac: %/
 	cd $< && $(DO_AUTORECONF) || true
-FORCE:
-.PHONY: FORCE
+#FORCE:
+#.PHONY: FORCE
 autoreconf: $(CONFIGURE_ACS)
 #	for i in **/configure.ac; do \
 #		cd $$(dirname $$i); \
 #		$(DO_AUTORECONF); \
 #		cd - >/dev/null; \
 #	done
+
+# stupid autotools nonsense
+am--refresh:
 
 # Apparently, optimizations really slow down Travis here.
 old_agbcc$(EXE): agbcc$(EXE)
@@ -140,7 +141,7 @@ clean: binutils_clean $(CLEAN) libc_clean libgcc_clean old_gcc_clean gcc_clean
 
 
 .PHONY: binutils old gcc old_gcc libc libgcc all clean install
-.PHONY: install-prefix-check $(ALL) $(SUBDIRS) $(OBJS_TGTS) $(BINUTILS_INSTALL) $(BINUTILS_INSTALL_STRIP) $(CLEAN) $(CONFIGURE_TGTS) install install-strip clean
+.PHONY: install-prefix-check $(ALL) $(SUBDIRS) $(OBJS_TGTS) $(BINUTILS_INSTALL) $(BINUTILS_INSTALL_STRIP) $(CLEAN) install install-strip clean
 
 ifeq (,$(FORCE_INSTALL_LOCATION))
 INSTALL_ERROR = $(warning Try 'make install prefix=~/pokeruby' (or similar)) \
@@ -162,9 +163,15 @@ ifneq ($(filter / /usr /usr/% /data/data/com.termux/files/usr /data/data/com.ter
 endif
 endif
 
-configure: ld-configure gas-configure bfd-configure libiberty-configure binutils-configure
+#include/config.h : config.status
+#	$(SHELL) ./config.status
+config.status: configure
+	$(SHELL) ./configure -C --disable-option-checking $(CONFIGURE_ARGS)
 
-# dir-configure:
+$(CONFIG_STATUS_DEPENDENCIES): config.status
+	$(SHELL) ./config.status
+
+# dir/Makefile:
 #     runs ./configure if Makefile doesn't exist.
 # dir-objs:
 #     Builds all of the objects without linking. Even though these
@@ -178,81 +185,56 @@ configure: ld-configure gas-configure bfd-configure libiberty-configure binutils
 # dir-install, dir-install-strip:
 #     Installs, optionally stripping.
 
-ld-configure:
-	@if [ ! -f ld/Makefile ]; then                     \
-	    echo "Configuring in ld...";                   \
-	    cd ld && $(CONFIGURE);                         \
-	fi
-ld-objs: ld-configure bfd-headers
+ld-objs: ld/Makefile bfd-headers include/config.h
 	@$(MAKE) -C ld objs $(SUBSUBMAKEFLAGS)
 ld-all: ld-objs bfd-all libiberty-all
 	@$(MAKE) -C ld $(SUBSUBMAKEFLAGS)
-ld-clean: ld-configure
+ld-clean: ld/Makefile
 	@$(MAKE) -C ld clean $(SUBSUBMAKEFLAGS)
 ld-install: ld-all
 	@$(MAKE) -C ld install prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 ld-install-strip: ld-all
 	@$(MAKE) -C ld install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-binutils-configure:
-	@if [ ! -f binutils/Makefile ]; then                \
-	    echo "Configuring in binutils...";              \
-	    cd binutils && $(CONFIGURE);                    \
-	fi
-binutils-objs: binutils-configure bfd-headers
+binutils-objs: binutils/Makefile bfd-headers
 	@$(MAKE) -C binutils objs $(SUBSUBMAKEFLAGS)
 binutils-all: binutils-objs bfd-all libiberty-all
 	@$(MAKE) -C binutils $(SUBSUBMAKEFLAGS)
-binutils-clean: binutils-configure
+binutils-clean: binutils/Makefile
 	@$(MAKE) -C binutils clean $(SUBSUBMAKEFLAGS)
 binutils-install: binutils-all
 	@$(MAKE) -C binutils install prefix=$(prefix)/tools/binutils  $(SUBSUBMAKEFLAGS)
 binutils-install-strip: binutils-all
 	@$(MAKE) -C binutils install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-gas-configure:
-	@if [ ! -f gas/Makefile ]; then                     \
-	    echo "Configuring in gas...";                   \
-	    cd gas && $(CONFIGURE);                         \
-	fi
-gas-objs: gas-configure bfd-headers
+gas-objs: include/config.h gas/Makefile bfd-headers
 	@$(MAKE) -C gas objs $(SUBSUBMAKEFLAGS)
 gas-all: gas-objs bfd-all libiberty-all
 	@$(MAKE) -C gas $(SUBSUBMAKEFLAGS)
-gas-clean: gas-configure
+gas-clean: gas/Makefile
 	@$(MAKE) -C gas clean $(SUBSUBMAKEFLAGS)
 gas-install: gas-all
 	@$(MAKE) -C gas install prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 gas-install-strip: gas-all
 	@$(MAKE) -C gas install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-bfd-configure:
-	@if [ ! -f bfd/Makefile ]; then                     \
-	    echo "Configuring in bfd...";                   \
-	        cd bfd && $(CONFIGURE);                     \
-	fi
-bfd-objs: bfd-configure
+bfd-objs: bfd/Makefile
 	@$(MAKE) -C bfd objs $(SUBSUBMAKEFLAGS)
-bfd-all: bfd-objs
+bfd-all: include/config.h bfd-objs
 	@$(MAKE) -C bfd $(SUBSUBMAKEFLAGS)
-bfd-clean: bfd-configure
+bfd-clean: bfd/Makefile
 	@$(MAKE) -C bfd clean $(SUBSUBMAKEFLAGS)
 
 # All subdirs (aside from bfd and libiberty) need bfd.h to build.
-bfd-headers: bfd/stmp-bfd-h
-bfd/stmp-bfd-h: bfd-configure
+bfd-headers: bfd/stmp-bfd-h bfd/bfd-in3.h include/config.h
+bfd/stmp-bfd-h: include/config.h bfd/Makefile
 	@$(MAKE) -C bfd headers $(SUBSUBMAKEFLAGS)
 .PHONY: bfd-headers
 
-libiberty-configure:
-	@if [ ! -f libiberty/Makefile ]; then               \
-	    echo "Configuring in libiberty...";             \
-	    cd libiberty && $(CONFIGURE);                   \
-	fi
-libiberty-objs: libiberty-configure
+libiberty-objs: libiberty/Makefile
 	@$(MAKE) -C libiberty objs $(SUBSUBMAKEFLAGS)
-libiberty-all: libiberty-objs
+libiberty-all: include/config.h libiberty-objs
 	@$(MAKE) -C libiberty $(SUBSUBMAKEFLAGS)
-libiberty-clean: libiberty-configure
+libiberty-clean: libiberty/Makefile
 	@$(MAKE) -C libiberty clean $(SUBSUBMAKEFLAGS)
 

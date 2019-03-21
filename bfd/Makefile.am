@@ -17,8 +17,8 @@
 # <http://www.gnu.org/licenses/>.
 #
 
-AUTOMAKE_OPTIONS = no-dist foreign
-ACLOCAL_AMFLAGS = -I . -I .. -I ../config
+AUTOMAKE_OPTIONS := no-dependencies no-dist foreign
+ACLOCAL_AMFLAGS := -I . -I .. -I ../config
 
 INCDIR = $(srcdir)/../include
 CSEARCH = -I. -I$(srcdir) -I$(INCDIR)
@@ -171,7 +171,7 @@ stamp-ofiles: Makefile
 	  esac ; \
 	done ; \
 	echo $$f > tofiles
-	$(SHELL) $(srcdir)/../aux/move-if-change tofiles ofiles
+	$(SHELL) $(srcdir)/../config/move-if-change tofiles ofiles
 	touch stamp-ofiles
 
 ofiles: stamp-ofiles ; @true
@@ -212,7 +212,7 @@ dwarf2.o: dwarf2.c Makefile
 	$(COMPILE) -c -o $@ -DDEBUGDIR=\"$(libdir)/debug\" $(srcdir)/dwarf2.c
 
 BFD_H_DEPS= $(INCDIR)/ansidecl.h $(INCDIR)/symcat.h
-LOCAL_H_DEPS= libbfd.h sysdep.h config.h
+LOCAL_H_DEPS= libbfd.h sysdep.h ../include/config.h
 $(BFD32_LIBS) \
  $(ALL_MACHINES) \
  $(BFD32_BACKENDS) \
@@ -232,7 +232,7 @@ $(BFD_H): libbfd.h stmp-bfd-h ; @true
 stmp-bfd-h: bfd-in3.h
 	rm -f bfd-tmp.h
 	cp bfd-in3.h bfd-tmp.h
-	$(SHELL) $(srcdir)/../aux/move-if-change bfd-tmp.h $(BFD_H)
+	$(SHELL) $(srcdir)/../config/move-if-change bfd-tmp.h $(BFD_H)
 	rm -f bfd-tmp.h
 	touch stmp-bfd-h
 
@@ -253,7 +253,7 @@ CLEANFILES = bfd.h dep.sed stmp-bfd-h DEP DEPA DEP1 DEP2 libbfd.a stamp-lib \
 
 DISTCLEANFILES = $(BUILD_CFILES) $(BUILD_HFILES)
 
-bfdver.h: $(srcdir)/version.h $(srcdir)/development.sh $(srcdir)/Makefile.in
+bfdver.h: $(srcdir)/version.h $(srcdir)/development.sh
 	@echo "creating $@"
 	@bfd_version=`echo "$(VERSION)" | $(SED) -e 's/\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\).*/\1.00\2.00\3.00\4.00\5/' -e 's/\([^\.]*\)\..*\(..\)\..*\(..\)\..*\(..\)\..*\(..\)$$/\1\2\3\4\5/'` ;\
 	bfd_version_string="\"$(VERSION)\"" ;\

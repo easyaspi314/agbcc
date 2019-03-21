@@ -163,7 +163,7 @@ sysroff.h: sysinfo$(EXEEXT_FOR_BUILD) sysroff.info
 sysinfo$(EXEEXT_FOR_BUILD): sysinfo.@OBJEXT@ syslex_wrap.@OBJEXT@
 	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(LDFLAGS_FOR_BUILD) -o $@ sysinfo.@OBJEXT@ syslex_wrap.@OBJEXT@
 
-syslex_wrap.@OBJEXT@: syslex_wrap.c syslex.c sysinfo.h config.h
+syslex_wrap.@OBJEXT@: syslex_wrap.c syslex.c sysinfo.h ../include/config.h
 	$(CC_FOR_BUILD) -c -I. -I$(srcdir) $(AM_CFLAGS_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(NO_WERROR) $(srcdir)/syslex_wrap.c
 
 sysinfo.@OBJEXT@: sysinfo.c

@@ -12,7 +12,7 @@ endif
 ASFLAGS := -mcpu=arm7tdmi
 
 CC1    := ../old_agbcc
-CFLAGS := -O2 -fno-builtin
+CFLAGS := -O2 -fno-builtin -std=gnu99
 AR     := ../binutils/ar
 AS     := ../gas/as-new
 CPP    := $(CC) -E

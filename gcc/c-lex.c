@@ -214,7 +214,8 @@ void init_lex(void)
     {
         UNSET_RESERVED_WORD("asm");
         UNSET_RESERVED_WORD("typeof");
-        UNSET_RESERVED_WORD("inline");
+        if (!flag_isoc99)
+            UNSET_RESERVED_WORD("inline");
         UNSET_RESERVED_WORD("iterator");
         UNSET_RESERVED_WORD("complex");
     }
