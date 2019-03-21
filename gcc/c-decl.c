@@ -606,6 +606,7 @@ void c_decode_option(char *p)
         flag_no_asm = 1;
         flag_no_nonansi_builtin = 1;
         flag_isoc99 = 1;
+        warn_long_long = 0;
         break;
     case FLAG_GNU90:
         flag_traditional = 0;
@@ -620,6 +621,7 @@ void c_decode_option(char *p)
         flag_no_asm = 0;
         flag_no_nonansi_builtin = 0;
         flag_isoc99 = 1;
+        warn_long_long = 0;
         break;
     case FLAG_SIGNED_BITFIELDS:
         flag_signed_bitfields = opt->val;
