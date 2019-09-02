@@ -27,6 +27,8 @@ noinst_LIBRARIES = libbfd.a
 
 bfddocdir =
 
+BFD_H = bfd.h
+
 # Empty these so that the respective installation directories will not be created.
 bfdlibdir =
 bfdincludedir =
@@ -38,9 +40,6 @@ NO_WERROR =
 AM_CFLAGS = $(WARN_CFLAGS)
 AM_CPPFLAGS = -DBINDIR='"$(bindir)"'
 COMPILE = $(CC) $(CFLAGS) $(AM_CPPFLAGS) $(AM_CFLAGS)
-
-# bfd.h goes here, for now
-BFD_H = bfd.h
 
 # Jim Kingdon notes:
 # Writing S-records should be included in all (or at least most)
@@ -139,16 +138,17 @@ CFILES = $(SOURCE_CFILES) $(BUILD_CFILES)
 
 ## This is a list of all .h files which are in the source tree.
 SOURCE_HFILES = \
+	bfd.h \
+	bfdver.h \
 	elf-bfd.h  \
 	elfcode.h elfcore.h \
 	genlink.h \
 	libbfd.h \
 	opintl.h \
 	version.h
+	targmatch.h
 
-## ... and all .h files which are in the build tree.
-BUILD_HFILES = \
-	bfdver.h targmatch.h
+BUILD_HFILES =
 
 # Ensure they are built early:
 BUILT_SOURCES = $(BUILD_HFILES)
@@ -185,19 +185,6 @@ EXTRA_libbfd_a_SOURCES = $(CFILES)
 libbfd_a_DEPENDENCIES = $(OFILES) ofiles
 libbfd_a_LIBADD = `cat ofiles` $(LIBDL)
 
-# libtool will build .libs/libbfd.a.  We create libbfd.a in the build
-# directory so that we don't have to convert all the programs that use
-# libbfd.a simultaneously.  This is a hack which should be removed if
-# everything else starts using libtool.  FIXME.
-
-# This file holds an array associating configuration triplets and
-# vector names.  It is built from config.bfd.  It is not compiled by
-# itself, but is included by targets.c.
-targmatch.h: config.bfd targmatch.sed
-	rm -f targmatch.h
-	$(SED) -f $(srcdir)/targmatch.sed < $(srcdir)/config.bfd > targmatch.new
-	mv -f targmatch.new targmatch.h
-
 # When compiling archures.c and targets.c, supply the default target
 # info from configure.
 
@@ -227,15 +214,6 @@ aout-params.h: gen-aout
 gen-aout: $(srcdir)/gen-aout.c Makefile
 	$(CC) -o gen-aout $(CFLAGS) $(LFLAGS) $(srcdir)/gen-aout.c
 
-$(BFD_H): libbfd.h stmp-bfd-h ; @true
-
-stmp-bfd-h: bfd-in3.h
-	rm -f bfd-tmp.h
-	cp bfd-in3.h bfd-tmp.h
-	$(SHELL) $(srcdir)/../config/move-if-change bfd-tmp.h $(BFD_H)
-	rm -f bfd-tmp.h
-	touch stmp-bfd-h
-
 BFD_H_FILES = bfd-in.h init.c opncls.c libbfd.c \
 	bfdio.c bfdwin.c section.c archures.c reloc.c \
 	bfd.c archive.c corefile.c targets.c format.c \
@@ -244,34 +222,13 @@ BFD_H_FILES = bfd-in.h init.c opncls.c libbfd.c \
 LIBBFD_H_FILES = libbfd-in.h libbfd.c bfdio.c bfdwin.c \
 	cache.c reloc.c archures.c linker.c
 
-headers: $(BUILD_HFILES) bfd.h
-
 MOSTLYCLEANFILES = ofiles stamp-ofiles
 
-CLEANFILES = bfd.h dep.sed stmp-bfd-h DEP DEPA DEP1 DEP2 libbfd.a stamp-lib \
+CLEANFILES = dep.sed DEP DEPA DEP1 DEP2 libbfd.a stamp-lib \
 	stmp-bin2-h stmp-lbfd-h
 
 DISTCLEANFILES = $(BUILD_CFILES) $(BUILD_HFILES)
 
-bfdver.h: $(srcdir)/version.h $(srcdir)/development.sh
-	@echo "creating $@"
-	@bfd_version=`echo "$(VERSION)" | $(SED) -e 's/\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\)\.*\([^\.]*\).*/\1.00\2.00\3.00\4.00\5/' -e 's/\([^\.]*\)\..*\(..\)\..*\(..\)\..*\(..\)\..*\(..\)$$/\1\2\3\4\5/'` ;\
-	bfd_version_string="\"$(VERSION)\"" ;\
-	bfd_soversion="$(VERSION)" ;\
-	bfd_version_package="\"$(PKGVERSION)\"" ;\
-	report_bugs_to="\"$(REPORT_BUGS_TO)\"" ;\
-	. $(srcdir)/development.sh ;\
-	if test "$$development" = true ; then \
-	  bfd_version_date=`$(SED) -n -e 's/.*DATE //p' < $(srcdir)/version.h` ;\
-	  bfd_version_string="\"$(VERSION).$${bfd_version_date}\"" ;\
-	  bfd_soversion="$(VERSION).$${bfd_version_date}" ;\
-	fi ;\
-	$(SED) -e "s,@bfd_version@,$$bfd_version," \
-	    -e "s,@bfd_version_string@,$$bfd_version_string," \
-	    -e "s,@bfd_version_package@,$$bfd_version_package," \
-	    -e "s,@report_bugs_to@,$$report_bugs_to," \
-	    < $(srcdir)/version.h > $@;
-
 # A helper that only builds the object files, without linking.
-objs: headers $(OFILES) ofiles $(libbfd_a_OBJECTS)
+objs: $(OFILES) ofiles $(libbfd_a_OBJECTS)
 .PHONY: objs

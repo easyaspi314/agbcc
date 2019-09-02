@@ -48,7 +48,7 @@ ifeq (,$(DASH_LINENO_CHECK))
 endif
 export SHELL := $(SHELL)
 MAKEFLAGS += --no-print-directory
-CONFIG_STATUS_DEPENDENCIES := bfd/bfd-in3.h include/config.h $(addsuffix /Makefile, $(SUBDIRS))
+CONFIG_STATUS_DEPENDENCIES := bfd/bfd.h include/config.h $(addsuffix /Makefile, $(SUBDIRS))
 
 ifeq (Windows_NT,$(OS))
 EXE := .exe
@@ -56,11 +56,9 @@ else
 EXE :=
 endif
 
-all: binutils old_gcc gcc libc libgcc
+all: binutils-all gas-all ld-all old_gcc gcc libc libgcc
 
-binutils: $(BINUTILS_TGTS)
-
-install: install-prefix-check binutils old_gcc gcc libc libgcc $(BINUTILS_INSTALL_STRIP)
+install: install-prefix-check binutils-all gas-all ld-all old_gcc gcc libc libgcc $(BINUTILS_INSTALL_STRIP)
 	@mkdir -p $(prefix)/tools/agbcc
 	@mkdir -p $(prefix)/tools/agbcc/bin
 	@mkdir -p $(prefix)/tools/agbcc/include
@@ -112,13 +110,16 @@ agbcc$(EXE):
 	cp gcc/agbcc$(EXE) agbcc$(EXE)
 
 
-binutils_clean: $(CLEAN)
-
 libc.a: libc/libc.a
 	cp libc/libc.a libc.a
-libc/libc.a: old_gcc binutils
+libc/libc.a: old_gcc binutils-all libc-objs
 	@$(MAKE) -C libc
+libc-objs: libc-asms gas-all
+	@$(MAKE) -C libc objs
+libc-asms: old_agbcc
+	@$(MAKE) -C libc asms
 
+.PHONY: libc-objs libc-asms
 libc: libc.a
 
 libc_clean:
@@ -128,7 +129,7 @@ libc_clean:
 libgcc.a: libgcc/libgcc.a
 	cp libgcc/libgcc.a libgcc.a
 
-libgcc/libgcc.a: old_gcc binutils
+libgcc/libgcc.a: old_gcc binutils-all gas-all
 	@$(MAKE) -C libgcc
 
 libgcc: libgcc.a
@@ -137,11 +138,11 @@ libgcc_clean:
 	$(RM) libgcc.a
 	@$(MAKE) -C libgcc clean
 
-clean: binutils_clean $(CLEAN) libc_clean libgcc_clean old_gcc_clean gcc_clean
+clean: $(CLEAN) libc_clean libgcc_clean old_gcc_clean gcc_clean
 
 
-.PHONY: binutils old gcc old_gcc libc libgcc all clean install
-.PHONY: install-prefix-check $(ALL) $(SUBDIRS) $(OBJS_TGTS) $(BINUTILS_INSTALL) $(BINUTILS_INSTALL_STRIP) $(CLEAN) install install-strip clean
+.PHONY: old gcc old_gcc libc libgcc all clean install
+.PHONY: install-prefix-check $(ALL) $(SUBDIRS) $(OBJS_TGTS) $(BINUTILS_INSTALL) $(BINUTILS_INSTALL_STRIP) $(CLEAN) install install-strip
 
 ifeq (,$(FORCE_INSTALL_LOCATION))
 INSTALL_ERROR = $(warning Try 'make install prefix=~/pokeruby' (or similar)) \
@@ -169,7 +170,6 @@ config.status: configure
 	$(SHELL) ./configure -C --disable-option-checking $(CONFIGURE_ARGS)
 
 $(CONFIG_STATUS_DEPENDENCIES): config.status
-	$(SHELL) ./config.status
 
 # dir/Makefile:
 #     runs ./configure if Makefile doesn't exist.
@@ -185,7 +185,7 @@ $(CONFIG_STATUS_DEPENDENCIES): config.status
 # dir-install, dir-install-strip:
 #     Installs, optionally stripping.
 
-ld-objs: ld/Makefile bfd-headers include/config.h
+ld-objs: include/config.h ld/Makefile
 	@$(MAKE) -C ld objs $(SUBSUBMAKEFLAGS)
 ld-all: ld-objs bfd-all libiberty-all
 	@$(MAKE) -C ld $(SUBSUBMAKEFLAGS)
@@ -196,7 +196,7 @@ ld-install: ld-all
 ld-install-strip: ld-all
 	@$(MAKE) -C ld install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-binutils-objs: binutils/Makefile bfd-headers
+binutils-objs: include/config.h binutils/Makefile
 	@$(MAKE) -C binutils objs $(SUBSUBMAKEFLAGS)
 binutils-all: binutils-objs bfd-all libiberty-all
 	@$(MAKE) -C binutils $(SUBSUBMAKEFLAGS)
@@ -207,7 +207,7 @@ binutils-install: binutils-all
 binutils-install-strip: binutils-all
 	@$(MAKE) -C binutils install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-gas-objs: include/config.h gas/Makefile bfd-headers
+gas-objs: include/config.h gas/Makefile
 	@$(MAKE) -C gas objs $(SUBSUBMAKEFLAGS)
 gas-all: gas-objs bfd-all libiberty-all
 	@$(MAKE) -C gas $(SUBSUBMAKEFLAGS)
@@ -218,22 +218,17 @@ gas-install: gas-all
 gas-install-strip: gas-all
 	@$(MAKE) -C gas install-strip prefix=$(prefix)/tools/binutils $(SUBSUBMAKEFLAGS)
 
-bfd-objs: bfd/Makefile
+bfd-objs: include/config.h bfd/Makefile
 	@$(MAKE) -C bfd objs $(SUBSUBMAKEFLAGS)
-bfd-all: include/config.h bfd-objs
+bfd-all: bfd-objs
 	@$(MAKE) -C bfd $(SUBSUBMAKEFLAGS)
 bfd-clean: bfd/Makefile
 	@$(MAKE) -C bfd clean $(SUBSUBMAKEFLAGS)
 
-# All subdirs (aside from bfd and libiberty) need bfd.h to build.
-bfd-headers: bfd/stmp-bfd-h bfd/bfd-in3.h include/config.h
-bfd/stmp-bfd-h: include/config.h bfd/Makefile
-	@$(MAKE) -C bfd headers $(SUBSUBMAKEFLAGS)
-.PHONY: bfd-headers
 
-libiberty-objs: libiberty/Makefile
+libiberty-objs: include/config.h libiberty/Makefile
 	@$(MAKE) -C libiberty objs $(SUBSUBMAKEFLAGS)
-libiberty-all: include/config.h libiberty-objs
+libiberty-all: libiberty-objs
 	@$(MAKE) -C libiberty $(SUBSUBMAKEFLAGS)
 libiberty-clean: libiberty/Makefile
 	@$(MAKE) -C libiberty clean $(SUBSUBMAKEFLAGS)

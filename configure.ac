@@ -689,7 +689,7 @@ if test x"$ac_cv_func_mmap" = xyes; then
   AC_DEFINE(USE_MMAP, 1, [Use mmap if it's available?])
 fi
 
-AC_CONFIG_FILES([bfd/Makefile bfd/bfd-in3.h:bfd/bfd-in2.h gas/Makefile ld/Makefile libiberty/Makefile binutils/Makefile])
+AC_CONFIG_FILES([bfd/Makefile bfd/bfd.h:bfd/bfd-in2.h gas/Makefile ld/Makefile libiberty/Makefile binutils/Makefile])
 
 # We need multilib support, but only if configuring for the target.
 AC_CONFIG_COMMANDS([default],

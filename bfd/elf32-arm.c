@@ -5697,7 +5697,6 @@ elf32_arm_populate_plt_entry (bfd *output_bfd, struct bfd_link_info *info,
   bfd_byte *loc;
   bfd_vma plt_index;
   Elf_Internal_Rela rel;
-  bfd_vma plt_header_size;
   bfd_vma got_header_size;
 
   htab = elf32_arm_hash_table (info);
@@ -5712,7 +5711,6 @@ elf32_arm_populate_plt_entry (bfd *output_bfd, struct bfd_link_info *info,
       /* There are no reserved entries in .igot.plt, and no special
 	 first entry in .iplt.  */
       got_header_size = 0;
-      plt_header_size = 0;
     }
   else
     {
@@ -5721,7 +5719,6 @@ elf32_arm_populate_plt_entry (bfd *output_bfd, struct bfd_link_info *info,
       srel = htab->root.srelplt;
 
       got_header_size = get_elf_backend_data (output_bfd)->got_header_size;
-      plt_header_size = htab->plt_header_size;
     }
   BFD_ASSERT (splt != NULL && srel != NULL);
 

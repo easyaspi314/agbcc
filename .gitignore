@@ -30,3 +30,23 @@ gas/as-new
 ld/ld-new
 ld/ldscripts/*
 
+bfd/Makefile
+bfd/bfd.h
+bfd/ofiles
+bfd/stamp-ofiles
+binutils/Makefile
+binutils/sysinfo
+binutils/sysroff.h
+gas/Makefile
+gas/config/.dirstamp
+include/config.h
+include/stamp-h1
+ld/Makefile
+ld/earmelf.c
+ld/ldemul-list.h
+ld/stringify.sed
+ld/tmpdir/
+libiberty/Makefile
+libiberty/required-list
+libiberty/stamp-h
+libiberty/xhost-mkfrag

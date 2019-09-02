@@ -31,7 +31,7 @@ void abort(void)
 #endif
 }
 
-isatty(int fd)
+int isatty(int fd)
 {
     return 1;
 }

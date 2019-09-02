@@ -293,7 +293,6 @@ bfd_default_scan (const bfd_arch_info_type *info, const char *string)
   const char *ptr_src;
   const char *ptr_tst;
   uint32_t number;
-  enum bfd_architecture arch;
   const char *printable_name_colon;
 
   /* Exact match of the architecture name (ARCH_NAME) and also the
@@ -374,9 +373,6 @@ bfd_default_scan (const bfd_arch_info_type *info, const char *string)
       number = number * 10 + *ptr_src - '0';
       ptr_src++;
     }
-
-  if (arch != info->arch)
-    return FALSE;
 
   if (number != info->mach)
     return FALSE;

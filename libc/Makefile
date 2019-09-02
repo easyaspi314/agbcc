@@ -18,8 +18,8 @@ AS     := ../gas/as-new
 CPP    := $(CC) -E
 
 CPPFLAGS := -I ../ginclude -I include -nostdinc -undef \
--DABORT_PROVIDED -DHAVE_GETTIMEOFDAY -D__thumb__ -DARM_RDI_MONITOR \
--D__GNUC__ -DINTERNAL_NEWLIB -D__USER_LABEL_PREFIX__=
+    -DABORT_PROVIDED -DHAVE_GETTIMEOFDAY -D__thumb__ -DARM_RDI_MONITOR \
+    -D__GNUC__ -DINTERNAL_NEWLIB -D__USER_LABEL_PREFIX__=
 
 
 # Clear the default suffixes.
@@ -32,49 +32,54 @@ CPPFLAGS := -I ../ginclude -I include -nostdinc -undef \
 
 C_SRCS := $(shell find . -iname "*.c" -a ! -iname "mallocr.c")
 C_OBJS := $(C_SRCS:%.c=%.o)
+C_ASMS := $(C_SRCS:%.c=%.s)
 
 MALLOC_OBJS := stdlib/mallocr.o stdlib/freer.o stdlib/reallocr.o stdlib/callocr.o \
 stdlib/cfreer.o stdlib/malignr.o stdlib/vallocr.o stdlib/pvallocr.o \
 stdlib/mallinfor.o stdlib/mallstatsr.o stdlib/msizer.o stdlib/malloptr.o \
 stdio/vfiprintf.o
+MALLOC_ASMS := $(MALLOC_OBJS:%.o=%.s)
 
 S_SRCS := arm/setjmp.s arm/trap.s
 S_OBJS := $(S_SRCS:%.s=%.o)
 
 OBJS := $(C_OBJS) $(MALLOC_OBJS) $(S_OBJS)
-
+BUILD_ASMS := $(MALLOC_ASMS) $(C_ASMS)
 all: libc.a
 	@:
 
 clean:
 	rm -f $(OBJS)
-	rm -f $(C_OBJS:%.o=%.s)
+	rm -f $(BUILD_ASMS)
 	rm -f $(S_OBJS:%.o=%.i)
 	rm -f libc.a
 
 PREPROCESS := $(CPP) $(CPPFLAGS)
 
-stdlib/mallocr.o: PREPROCESS += -DDEFINE_MALLOC
-stdlib/freer.o: PREPROCESS += -DDEFINE_FREE
-stdlib/reallocr.o: PREPROCESS += -DDEFINE_REALLOC
-stdlib/callocr.o: PREPROCESS += -DDEFINE_CALLOC
-stdlib/cfreer.o:  PREPROCESS += -DDEFINE_CFREE
-stdlib/malignr.o: PREPROCESS += -DDEFINE_MEMALIGN
-stdlib/vallocr.o: PREPROCESS += -DDEFINE_VALLOC
-stdlib/pvallocr.o: PREPROCESS += -DDEFINE_PVALLOC
-stdlib/mallinfor.o: PREPROCESS += -DDEFINE_MALLINFO
-stdlib/mallstatsr.o: PREPROCESS += -DDEFINE_MALLOC_STATS
-stdlib/msizer.o: PREPROCESS += -DDEFINE_MALLOC_USABLE_SIZE
-stdlib/malloptr.o: PREPROCESS += -DDEFINE_MALLOPT
-stdio/vfiprintf.o: PREPROCESS += -DINTEGER_ONLY
+stdlib/mallocr.s: PREPROCESS += -DDEFINE_MALLOC
+stdlib/freer.s: PREPROCESS += -DDEFINE_FREE
+stdlib/reallocr.s: PREPROCESS += -DDEFINE_REALLOC
+stdlib/callocr.s: PREPROCESS += -DDEFINE_CALLOC
+stdlib/cfreer.s:  PREPROCESS += -DDEFINE_CFREE
+stdlib/malignr.s: PREPROCESS += -DDEFINE_MEMALIGN
+stdlib/vallocr.s: PREPROCESS += -DDEFINE_VALLOC
+stdlib/pvallocr.s: PREPROCESS += -DDEFINE_PVALLOC
+stdlib/mallinfor.s: PREPROCESS += -DDEFINE_MALLINFO
+stdlib/mallstatsr.s: PREPROCESS += -DDEFINE_MALLOC_STATS
+stdlib/msizer.s: PREPROCESS += -DDEFINE_MALLOC_USABLE_SIZE
+stdlib/malloptr.s: PREPROCESS += -DDEFINE_MALLOPT
+stdio/vfiprintf.s: PREPROCESS += -DINTEGER_ONLY
 
-stdlib/mbtowc_r.o: CFLAGS := $(CFLAGS) -fshort-enums
+stdlib/mbtowc_r.s: CFLAGS := $(CFLAGS) -fshort-enums
 
-$(MALLOC_OBJS): stdlib/mallocr.c
-	$(PREPROCESS) $< | $(CC1) $(CFLAGS) | $(AS) $(ASFLAGS) -o $@
+$(MALLOC_ASMS): stdlib/mallocr.c
+	$(PREPROCESS) $< | $(CC1) $(CFLAGS) -o $@
 
-$(C_OBJS): %.o : %.c
-	$(PREPROCESS) $< | $(CC1) $(CFLAGS) | $(AS) $(ASFLAGS) -o $@
+$(C_OBJS) $(MALLOC_OBJS): %.o : %.s
+	$(AS) $(ASFLAGS) $< -o $@
+
+$(C_ASMS): %.s: %.c
+	$(PREPROCESS) $< | $(CC1) $(CFLAGS) -o $@
 
 $(S_OBJS): %.o: %.s
 	@$(CPP) $(CPPFLAGS) -x c -P $< -o $*.i
@@ -83,3 +88,9 @@ $(S_OBJS): %.o: %.s
 
 libc.a: $(OBJS)
 	$(AR) -rc libc.a $(OBJS)
+
+# A partial build step that builds .s files and doesn't need gas.
+asms: $(BUILD_ASMS)
+
+# A partial build step that builds .o files and doesn't need ar.
+objs: $(OBJS)

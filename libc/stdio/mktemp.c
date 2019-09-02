@@ -102,7 +102,7 @@ Supporting OS subroutines required: <<getpid>>, <<open>>, <<stat>>.
 #include <ctype.h>
 #include <reent.h>
 
-static _gettemp(struct _reent *ptr, char *path, register int *doopen)
+static int _gettemp(struct _reent *ptr, char *path, register int *doopen)
 {
     register char *start, *trv;
     struct stat sbuf;
@@ -173,7 +173,7 @@ static _gettemp(struct _reent *ptr, char *path, register int *doopen)
     /*NOTREACHED*/
 }
 
-_mkstemp_r(struct _reent *ptr, char *path)
+int _mkstemp_r(struct _reent *ptr, char *path)
 {
     int fd;
 
@@ -187,7 +187,7 @@ char *_mktemp_r(struct _reent *ptr, char *path)
 
 #ifndef _REENT_ONLY
 
-mkstemp(char *path)
+int mkstemp(char *path)
 {
     int fd;
 

@@ -1526,8 +1526,8 @@ print_insn_coprocessor (bfd_vma pc,
 
 		  case 'i':
 		    {
-		      long imm5;
-		      imm5 = ((given & 0x100) >> 4) | (given & 0xf);
+		      int imm5;
+		      imm5 = (int)(((given & 0x100) >> 4) | (given & 0xf));
 		      func (stream, "%d", (imm5 == 0) ? 32 : imm5);
 		    }
 		    break;
@@ -1542,7 +1542,7 @@ print_insn_coprocessor (bfd_vma pc,
 	}
 
       if (value_in_comment > 32 || value_in_comment < -16)
-	func (stream, "\t; 0x%x", value_in_comment);
+	func (stream, "\t; 0x%x", (unsigned int)value_in_comment);
 
       if (is_unpredictable)
 	func (stream, UNPREDICTABLE_INSTRUCTION);
@@ -2384,7 +2384,7 @@ print_insn_thumb16 (bfd_vma pc, struct disassemble_info *info, long given)
 		/* Right shift immediate -- bits 6..10; 1-31 print
 		   as themselves, 0 prints as 32.  */
 		{
-		  long imm = (given & 0x07c0) >> 6;
+		  int imm = (given & 0x07c0) >> 6;
 		  if (imm == 0)
 		    imm = 32;
 		  func (stream, "#%d", imm);
@@ -2490,7 +2490,7 @@ print_insn_thumb16 (bfd_vma pc, struct disassemble_info *info, long given)
 	  }
 
 	if (value_in_comment > 32 || value_in_comment < -16)
-	  func (stream, "\t; 0x%x", value_in_comment);
+	  func (stream, "\t; 0x%x", (unsigned int)value_in_comment);
 	return;
       }
 
@@ -3107,7 +3107,7 @@ print_insn_thumb32 (bfd_vma pc, struct disassemble_info *info, long given)
 	  }
 
 	if (value_in_comment > 32 || value_in_comment < -16)
-	  func (stream, "\t; 0x%x", value_in_comment);
+	  func (stream, "\t; 0x%x", (unsigned int)value_in_comment);
 
 	if (is_unpredictable)
 	  func (stream, UNPREDICTABLE_INSTRUCTION);
